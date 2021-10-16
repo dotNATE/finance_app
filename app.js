@@ -5,16 +5,29 @@ const { buildSchema } = require('graphql');
 
 const app = express();
 
+const records = [];
+
 app.use(json());
 
 app.use('/graphql', graphqlHTTP({
-    schema: buildSchema(`
+    schema: buildSchema(`    
+        type Record {
+            _id: ID!
+            date: String!
+            assets: [String!]!
+        }
+
+        input RecordInput {
+            date: String!
+            assets: [String!]!
+        }
+
         type RootQuery {
-            records: [String!]!
+            records: [Record!]!
         }
 
         type RootMutation {
-            createRecord(name: String): String
+            createRecord(recordInput: RecordInput): Record
         }
     
         schema {
@@ -24,12 +37,18 @@ app.use('/graphql', graphqlHTTP({
     `),
     rootValue: {
         records: () => {
-            return ['january', 'february', 'march'];
+            return records;
         },
         createRecord: (args) => {
-            const recordName = args.name;
+            const record = {
+                _id: Math.random().toString(),
+                date: args.recordInput.date,
+                assets: args.recordInput.assets,
+            };
+            
+            records.push(record);
 
-            return recordName;
+            return record
         }
     },
     graphiql: true,
